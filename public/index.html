@@ -1,0 +1,33 @@
+<!--
+ * @Author: tywd
+ * @Date: 2022-06-03 15:44:41
+ * @LastEditors: tywd
+ * @LastEditTime: 2022-06-03 16:11:19
+ * @FilePath: /webpack-learn/public/index.html
+ * @Description: Do not edit
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <% if(htmlWebpackPlugin.options.config.header) { %>
+        <style>
+            body,html{
+                background-color: bisque;
+            }
+        </style>
+    <% } %>
+    <title><%= (htmlWebpackPlugin.options.config.title) %></title>
+</head>
+
+<body>
+</body> 
+<% if(htmlWebpackPlugin.options.config.footer) { %>
+    <script type="text/javascript">
+        console.log('tywd')
+    </script> 
+<% } %>
+</html>
+
