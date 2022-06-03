@@ -1,14 +1,9 @@
 ## webpack 配置学习记录
 - 20220603
-
-    babel-loader 配置 转译ES6+ 为 ES5
-
-    html-webpack-plugin  html模板配置与打包输出
-
-    cross-env 运行环境
-
-    webpack-dev-server 启用 devServer 服务，运行在浏览器
-    
+    babel-loader 配置 转译ES6+ 为 ES5\
+    html-webpack-plugin  html模板配置与打包输出\
+    cross-env 运行环境\
+    webpack-dev-server 启用 devServer 服务，运行在浏览器\
 
 ## package.json 部分说明
 ```js
