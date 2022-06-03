@@ -2,29 +2,53 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const isDev = process.env.NODE_ENV === 'development';
 const config = require('./public/config')[isDev ? 'dev' : 'build'];
+const path = require('path')
 module.exports = {
     mode: "development",
     devtool: 'eval-cheap-module-source-map',
+    resolveLoader: {
+        alias: {
+            "console-loader": path.resolve(__dirname, "./custom-loader/console-loader.js"),
+            "company-loader": path.resolve(__dirname, "./custom-loader/company-loader.js")
+        }
+        // 这里就是说先去找 node_modules 目录中，如果没有的话再去 loaders 目录查找
+        // modules: [
+        //     'node_modules',
+        //     path.resolve(__dirname, 'custom-loader')
+        // ]
+    },
     module: {
         rules: [{
-            test: /\.js?$/,
-            use: {
-                loader: 'babel-loader',
-                //   一下options 也可卸载 .babelrc 文件里
-                //   options: {
-                //       presets: ["@babel/preset-env"],
-                //       plugins: [
-                //           [
-                //               "@babel/plugin-transform-runtime",
-                //               {
-                //                   "corejs": 3
-                //               }
-                //           ]
-                //       ]
-                //   }
+                test: /\.js?$/,
+                use: {
+                    loader: 'babel-loader',
+                    //   一下options 也可卸载 .babelrc 文件里
+                    //   options: {
+                    //       presets: ["@babel/preset-env"],
+                    //       plugins: [
+                    //           [
+                    //               "@babel/plugin-transform-runtime",
+                    //               {
+                    //                   "corejs": 3
+                    //               }
+                    //           ]
+                    //       ]
+                    //   }
+                },
+                exclude: /node_modules/ // 排除 node_modules 目录，node_modules 依赖一般没必要编译
             },
-            exclude: /node_modules/ // 排除 node_modules 目录，node_modules 依赖一般没必要编译
-        }]
+            {
+                test: /\.js$/,
+                use: ['console-loader',
+                    {
+                        loader: 'company-loader',
+                        options: {
+                            sign: 'tywd@2022',
+                        },
+                    },
+                ],
+            }
+        ]
     },
     plugins: [
         // plugins是存放所有的webpack插件的数组
