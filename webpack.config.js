@@ -3,6 +3,10 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const isDev = process.env.NODE_ENV === 'development';
 const config = require('./public/config')[isDev ? 'dev' : 'build'];
 const path = require('path')
+const BasicPlugin = require('./custom-plugins/basic-plugin.js'); // 自定义basicPlugin
+const FileListPlugin = require('./custom-plugins/filelist-plugin.js'); // 自定义basicPlugin
+const EndWebpackPlugin = require('./custom-plugins/end-webpack-plugin.js'); // 自定义basicPlugin
+
 module.exports = {
     mode: "development",
     devtool: 'eval-cheap-module-source-map',
@@ -61,7 +65,24 @@ module.exports = {
             },
             hash: true, // 是否加上hash，默认是 false
             config: config.template
-        })
+        }),
+        new BasicPlugin({
+            name: '123'
+        }),
+        new FileListPlugin({
+            outputFile: 'my-assets.md',
+        }),
+        // 在初始化 EndWebpackPlugin 时传入了两个参数，分别是在成功时的回调函数和失败时的回调函数；
+        new EndWebpackPlugin(
+            () => {
+                // Webpack 构建成功，并且文件输出了后会执行到这里，在这里可以做发布文件操作
+                console.log('EndWebpackPlugin - webpack 最后构建成功的回调　ｓｕｃｃｅｓｓ')
+            },
+            (err) => {
+                // Webpack 构建失败，err 是导致错误的原因
+                console.error('EndWebpackPlugin - webpack 最后构建成功的回调　ｅｒｒｏｒ', err);
+            }
+        )
     ],
     devServer: {
         // hot: true, // 启用热替换，默认为true

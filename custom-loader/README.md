@@ -8,6 +8,7 @@ Loader的方式
 - 统一原则，loader输入和输出都字符串
 
 ## 编写自定义loader
+[webpack 官方编写介绍](https://webpack.docschina.org/contribute/writing-a-loader/)
 ### 编写准则
 编写自定义的 loader 时，官方提供了一套用法准则（Guidelines），在编写的时候应该按照这套准则来使 loader 标准化：
 - 简单易用。
@@ -117,3 +118,18 @@ module.exports = {
     },
 }
 ```
+## 开发中常用的loader
+### 1. babel-loader
+### 2. ts-loader
+### 3. markdown-loader
+### 4. vue-loader
+### 5. file-loader
+### 6. url-loader
+### 7. svg-sprite-loader
+### 8. style-loader
+### 9. css-loader
+### 10. postcss-loader
+### 11. sass-loader
+### 12. thread-loader
+### 13. cache-loader
+### 14. raw-loader
