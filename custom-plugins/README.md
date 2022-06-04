@@ -129,15 +129,264 @@ module.exports = HelloPlugin
 
 ## 开发中常用的plugin
 ### 1. html-webpack-plugin
+将一个页面模板打包到dist目录下，默认都是自动引入js or css
+```html
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>首页</title>
+</head>
+<body>
+    <div id="app"></div>
+</body>
+</html>
+```
+```js
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+module.exports = {
+    plugins: [
+        new HtmlWebpackPlugin({
+            template: './index.html',  // 以本地的index.html文件为基础模板
+            filename: "index.html",  // 输出到dist目录下的文件名称
+        }),
+    ]
+}
+
+```
 ### 2. clean-webpack-plugin
-### 3. mini-css-extract-plugin
-### 4. copy-webpack-plugin
-### 5. webpack.HotModuleReplacementPlugin
-### 6. webpack.DefinePlugin
-### 7. webpack-bundle-analyzer
-### 8. SplitChunksPlugin
-### 9. terser-webpack-plugin
-### 10. VueLoaderPlugin
+用于每次打包dist目录删除
+```js
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+module.exports = {
+    plugins: [
+        new CleanWebpackPlugin()
+    ]
+}
+```
+### 3. copy-webpack-plugin
+用于将文件拷贝到某个目录下
+```js
+const CopyWebpackPlugin = require('copy-webpack-plugin');
+module.exports = {
+    plugins: [
+        new CopyWebpackPlugin({
+            patterns: [
+                {
+                    from: "./main.js",
+                    to: __dirname + "/dist/js",
+                    toType: "dir"
+                }
+            ]
+        })
+    ]
+}
+```
+上面配置中，将main.js拷贝到dist目录下的js里，toType默认是file，也可以设置为dir，因为我这dist目录下没有js目录。
+### 4. mini-css-extract-plugin
+都是将css样式提取出来，需要配合 css-loader
+```js
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+module.exports = {
+    module: {
+        rules: [
+            {
+                test: /\.css$/,
+                use: [
+                   MiniCssExtractPlugin.loader,
+                   "css-loader"
+                ]
+            }
+        ]
+    },
+    plugins: [
+        new MiniCssExtractPlugin({
+            filename: "css/[name].css",
+            chunkFilename: "css/[name].css"
+        })
+    ]
+}
+```
+### 5. optimize-css-assets-webpack-plugin
+用于压缩css样式
+```js
+const OptimizeCssAssetsWebpackPlugin = require("optimize-css-assets-webpack-plugin")
+module.exports = {
+    plugins: [
+        new OptimizeCssAssetsWebpackPlugin(),
+    ]
+}
+```
+### 6. webpack.HotModuleReplacementPlugin
+开启热模块更新，无需安装，webpack内置
+```js
+const Webpack = require("webpack")
+module.exports = {
+    plugins: [
+        new Webpack.HotModuleReplacementPlugin()
+    ]
+}
+```
+### 8. webpack.DefinePlugin
+用于注入全局变量，一般用在环境变量上。无需安装，webpack内置
+```js
+const Webpack = require("webpack")
+module.exports = {
+    plugins: [
+        new Webpack.DefinePlugin({
+          STR: JSON.stringify("蛙人"),
+          "process.env": JSON.stringify("dev"),
+          name: "蛙人"
+        })
+    ]
+}
+```
+上面配置中，DefinePlugin接收一个对象，里面的key值对应一个value值，这个value值是一个代码片段，可以看上面name那个，会报错 蛙人 is not defined，这里需要注意，value值必须是一个变量或代码片段。
+### 9. webpack.ProvidePlugin
+用于定义全局变量，如100个页面都引入vue，每个页面都引入只会增加工作量，直接在webpackProvide挂载一个变量就行，不用再去一一引入。无需安装，webpack内置
+```js
+const Webpack = require("webpack")
+module.exports = {
+    plugins: [
+        new Webpack.ProvidePlugin({
+            "Vue": ["vue", "default"] 
+        })
+    ]
+}
+```
+上面配置中，ProvidePlugin接收一个对象，key值是使用的变量，value值第一个参数是Vue模块，第二个参数默认取Es Module.default的属性。import默认引入进来是一个 Es Module的对象，里面有default这个属性就是实体对象
+### 10. webpack.SplitChunksPlugin
+以下两插件均为 Webpack 内置，无需安装。
+- webpack4.0之前使用 `webpack.optimize.CommonsChunkPlugin`
+- webpack4.0之后使用 `optimization.SplitChunks`
+
+`optimization.SplitChunks` 配置
+```js
+// main.js
+import Vue from "vue"
+console.log(Vue)
+import("./news")
+```
+```js
+// news.js
+import Vue from "vue"
+console.log(Vue)
+```
+```js
+// webpack.config.js
+module.exports = {
+    mode: "development",
+    entry: {
+        main: "./main.js"
+    },
+    output: {
+        filename: "[name].js",
+        path: __dirname + "/dist"
+    },
+    optimization: {
+        splitChunks: {
+            chunks: "all" // all是对所有的chunk都生效，默认只对async异步有效。
+        }
+    },
+}
+```
+splitChunks默认情况下也有自动提取，默认要求如下：
+- 被提取的模块来自node_module目录
+- 模块大于30kb
+- 按需加载时请求资源最大值小于等于5
+- 首次加载时并行请求最大值小于等于3
+### 11. webpack.IgnorePlugin
+用于过滤打包文件，减少打包体积大小。无需安装，webpack内置
+```js
+const Webpack = require("webpack")
+module.exports = {
+    plugins: [
+        new Webpack.IgnorePlugin(/.\/lib/, /element-ui/)
+    ]
+}
+```
+### 12. uglifyjs-webpack-plugin
+用于压缩js文件，针对webpack4版本以上。
+```js
+const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
+module.exports = {
+	optimization: {
+        minimizer: [
+            new UglifyJsPlugin({
+                test: /\.js(\?.*)?$/i,
+                exclude: /node_modules/
+            })
+        ]
+    }
+}
+```
+### 13. imagemin-webpack-plugin
+图片压缩
+```js
+const ImageminPlugin =  require('imagemin-webpack-plugin').default
+module.exports = {
+    plugins: [
+        new ImageminPlugin({
+             test: /\.(jpe?g|png|gif|svg)$/i 
+        })
+    ]
+}
+```
+### 14. VueLoaderPlugin
+Vue文件转换
+```js
+const { VueLoaderPlugin} = require('vue-loader'); // 来自于vue-loader
+module.exports = {
+    module: {
+        rules: [
+            {
+                test: /\.vue$/,
+                loader: 'vue-loader'
+            },
+        ]
+    },
+    plugins: [
+        new VueLoaderPlugin(),
+    ]
+}
+```
+### 15. webpack-bundle-analyzer
+打包分析
+```js
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
+module.exports = {
+    plugins: [
+      new BundleAnalyzerPlugin({
+        analyzerPort: 9091,
+        generateStatsFile: false
+      })
+    ]
+}
+```
+### 15. friendly-errors-webpack-plugin
+美化控制台，良好的提示错误。终端打印较美观
+```js
+const FriendlyErrorsWebpackPlugin = require('friendly-errors-webpack-plugin');
+module.exports = {
+	plugins: [
+		new FriendlyErrorsWebpackPlugin({
+			compilationSuccessInfo: {
+          notes: ['蛙人你好，系统正运行在http://localhost:' + devServer.port]
+      },
+      clearConsole: true,
+		})
+	],
+}
+```
 
 ## 参考文章
 [# 深入浅出的webpack](https://webpack.wuhaolin.cn/5%E5%8E%9F%E7%90%86/5-4%E7%BC%96%E5%86%99Plugin.html)
+
+[# 吐血整理的webpack入门知识及常用loader和plugin](https://juejin.cn/post/7067051380803895310)
+
+[# 分享15个Webpack实用的插件！！！](https://juejin.cn/post/6944940506862485511)
+
+[# 手把手教你写一个Vue组件发布到npm且可外链引入使用](https://juejin.cn/post/6943793273395740680)

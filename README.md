@@ -4,7 +4,7 @@
     babel-loader 配置 转译ES6+ 为 ES5\
     html-webpack-plugin  html模板配置与打包输出\
     cross-env 运行环境\
-    webpack-dev-server 启用 devServer 服务，运行在浏览器\
+    webpack-dev-server 启用 devServer 服务，运行在浏览器
 
 ## package.json 部分说明
 ```js
@@ -29,5 +29,15 @@
 
     // start 启用 devServer 服务，运行在浏览器
     "webpack-dev-server": "^4.9.1"
+
+    // start webpack 提供 用于校验传入参数 是否符合 plugin 或者 loader 设定的格式
+    "schema-utils": "^4.0.0",
+
+    // start 单元测试 jest
+    "babel-jest": "^28.1.0",
+    "jest": "^28.1.0",
+
+    // start 使用 memfs 去执行 webpack。这让我们避免向磁盘产生 输出文件，并允许我们访问获取转换模块的统计数据 stats
+    "memfs": "^3.4.4",
   }
 ```
