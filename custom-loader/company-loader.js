@@ -16,7 +16,8 @@ module.exports = function (source) {
     this.callback(null, addSign(source, options.sign)); // this.callback 是 Webpack 给 Loader 注入的 API
     // 当你使用 this.callback 返回内容时，该 Loader 必须返回 undefined，
     // 以让 Webpack 知道该 Loader 返回的结果在 this.callback 中，而不是 return 中 
-    return source;
+    return undefined;
+    // return source;
 }
 
 function addSign(content, sign) {

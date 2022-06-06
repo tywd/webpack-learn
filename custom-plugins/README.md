@@ -1,5 +1,15 @@
-# plugin
-## 什么是Plugin
+# 前言
+记录 `实现webpack plugin` 的学习总结\
+有误请多多指正，附上女神图保命 [手动狗头]
+> 编写的内容将收入专栏[webpack学习专栏](https://juejin.cn/column/7104936943544172558)
+
+学习已完成
+- [x] 1.什么是Plugin
+- [x] 2.编写自定义plugin
+- [x] 3.使用编写好的自定义plugin
+- [ ] 4.开发中常用的plugin介绍与使用
+
+# 什么是Plugin
 Webpack 通过 Plugin 机制让其更加灵活，以适应各种应用场景。 在 Webpack 运行的生命周期中会广播出许多事件，Plugin 可以监听这些事件，在合适的时机通过 Webpack 提供的 API 改变输出结果，Plugin 的出现就是为了丰富 Webpack 的 API。
 
 一个最基础的 Plugin 的代码是这样的：
@@ -36,8 +46,11 @@ Webpack 启动后，在读取配置的过程中会先执行 new BasicPlugin(opti
 
 这就是 Plugin 的工作原理，实际开发中还有很多细节，继续往下看。
 
-## 编写自定义plugin
-[webpack 官方编写介绍](https://webpack.docschina.org/contribute/writing-a-plugin/)
+# 编写自定义plugin
+在 Webpack 运行的生命周期中会广播出许多事件，在这些事件钩子中进行plugin操作，
+[webpack 工作流程钩子参考](https://juejin.cn/post/7104936845682671630/#heading-12)
+
+[webpack 官方编写 plugin 介绍](https://webpack.docschina.org/contribute/writing-a-plugin/)
 ### plugin基本结构
 一个最基本的 plugin 需要包含这些部分，在开发插件时需要注意：
 
@@ -119,15 +132,30 @@ module.exports = HelloPlugin
 ```
 
 ### 编写 plugin 常用 API 参考
-参考 basic-plugin.js 的构建
+Plugin 开发思路总结如下：
+- 通过 module.exports 导出一个 函数或类
+- 在 函数原型或类上绑定 apply() 访问 Compiler对象
+- 在 apply() 中指定一个绑定到 webpack 自身的事件钩子   Webpack Compiler Hooks API
+- 在事件钩子中通过 webpack 提供的 API 处理资源 (可引入第三方模块扩展功能)
+- 通过 webpack 提供的方法返回该资源
+传给每个Plugin的Compiler和Compilation都是同一个引用，若修改它们身上的属性会影响后面的Plugin，所以需谨慎操作
+
+参考 
+https://github.com/tywd/webpack-learn/tree/master/custom-plugins 下的的构建
+
+在
+https://github.com/tywd/webpack-learn 查看如何使用
 #### 判断 Webpack 使用了哪些插件
-参考 basic-plugin.js hasHtmlWebpackPlugin 方法
+参考 [custom-plugins/basic-plugin.js](https://github.com/tywd/webpack-learn/tree/master/custom-plugins/basic-plugin.js)  hasHtmlWebpackPlugin 方法
+#### compiler 事件钩子 done 和 failed
+参考 [custom-plugins/end-webpack-plugin.js](https://github.com/tywd/webpack-learn/tree/master/custom-plugins/end-webpack-plugin.js) 
+#### compiler 的 compilation 事件钩子 processAssets 和 emitAsset
+参考 [custom-plugins/filelist-plugin.js](https://github.com/tywd/webpack-learn/tree/master/custom-plugins/filelist-plugin.js) 
 
-
-## 使用编写好的自定义plugin
+# 使用编写好的自定义plugin
 参考上面 [什么是Plugin](#什么是Plugin)
 
-## 开发中常用的plugin
+# 开发中常用的plugin
 ### 1. html-webpack-plugin
 将一个页面模板打包到dist目录下，默认都是自动引入js or css
 ```html
@@ -335,6 +363,7 @@ module.exports = {
     ]
 }
 ```
+这个插件最好使用 `cnpm i -D imagemin-webpack-plugin`， npm 好像会有些依赖拉不到，以至于运行时出错
 ### 14. VueLoaderPlugin
 Vue文件转换
 ```js
@@ -381,7 +410,7 @@ module.exports = {
 	],
 }
 ```
-
+# 写在最后
 ## 参考文章
 [# 深入浅出的webpack](https://webpack.wuhaolin.cn/5%E5%8E%9F%E7%90%86/5-4%E7%BC%96%E5%86%99Plugin.html)
 
@@ -390,3 +419,10 @@ module.exports = {
 [# 分享15个Webpack实用的插件！！！](https://juejin.cn/post/6944940506862485511)
 
 [# 手把手教你写一个Vue组件发布到npm且可外链引入使用](https://juejin.cn/post/6943793273395740680)
+
+## 代码地址
+https://github.com/tywd/webpack-learn
+
+以上的方式总结只是自己学习总结，有其他方式欢迎各位大佬评论\
+**渣渣一个，欢迎各路大神多多指正，不求赞，只求监督指正(￣.￣)**\
+**有关文章经常被面试问到可以帮忙留下言，小弟也能补充完善完善一起交流学习，感谢各位大佬(～￣▽￣)～**
