@@ -10,4 +10,3 @@ class Fruit {
 
 const apple = new Fruit('apple');
 console.log('tywd哈哈哈哈哈哈哈');
-console.log('tywd哈哈哈哈哈哈哈');

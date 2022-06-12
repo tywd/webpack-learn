@@ -24,21 +24,25 @@ module.exports = {
     module: {
         rules: [{
                 test: /\.js?$/,
-                use: {
-                    loader: 'babel-loader',
-                    //   一下options 也可卸载 .babelrc 文件里
-                    //   options: {
-                    //       presets: ["@babel/preset-env"],
-                    //       plugins: [
-                    //           [
-                    //               "@babel/plugin-transform-runtime",
-                    //               {
-                    //                   "corejs": 3
-                    //               }
-                    //           ]
-                    //       ]
-                    //   }
-                },
+                use: [
+                    'cache-loader',
+                    'thread-loader',
+                    {
+                        loader: 'babel-loader',
+                        //   一下options 也可卸载 .babelrc 文件里
+                        //   options: {
+                        //       presets: ["@babel/preset-env"],
+                        //       plugins: [
+                        //           [
+                        //               "@babel/plugin-transform-runtime",
+                        //               {
+                        //                   "corejs": 3
+                        //               }
+                        //           ]
+                        //       ]
+                        //   }
+                    }
+                ],
                 exclude: /node_modules/ // 排除 node_modules 目录，node_modules 依赖一般没必要编译
             },
             {

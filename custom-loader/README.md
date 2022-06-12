@@ -83,12 +83,51 @@ Loader 开发思路，编写Loader时要遵循单一职责原则，每个Loader
 
 在 https://github.com/tywd/webpack-learn 查看如何使用
 #### 官方一个基础的 loader实现，并使用了 jest 对 loader 进行测试
-参考 [custom-loader/basic-loader.js](https://github.com/tywd/webpack-learn/tree/master/custom-loader/basic-loader.js)  方法
-#### 一个加入特定的注释的 loader
-参考 [custom-loader/company-loader.js](https://github.com/tywd/webpack-learn/tree/master/custom-loader/company-loader.js) 
-#### 一个清除所有 console.log 的 loader
-参考 [custom-loader/console-loader.js](https://github.com/tywd/webpack-learn/tree/master/custom-loader/console-loader.js) 
+具体代码参考 [custom-loader/basic-loader.js](https://github.com/tywd/webpack-learn/tree/master/custom-loader/basic-loader.js)  方法
+```js
+export default function basicLoader(source) {
+    const options = this.getOptions(); // 获取传进来的options选项
 
+    source = source.replace(/\[name\]/g, options.name); // 替换 .txt 里的 [name] 为传进来的 options.name
+
+    return `export default ${JSON.stringify(source)}`; // 以字符串的形式输出
+}
+```
+#### 一个加入特定的注释的 loader
+具体代码参考 [custom-loader/company-loader.js](https://github.com/tywd/webpack-learn/tree/master/custom-loader/company-loader.js) 
+```js
+// 功能是在编译出的代码中加上 以下格式 的公司年份信息，并且我们链式调用他们
+/** 公司@年份 */
+module.exports = function (source) {
+    // 获取到用户给当前 Loader 传入的 options
+    const options = this.getOptions(); // webpack5 开始可直接使用 this.getOptions() 代替 loader-utils.getOptions(this)
+    // console.log('options: ', options); 
+    // 通过 this.callback 告诉 Webpack 返回的结果
+    this.callback(null, addSign(source, options.sign)); // this.callback 是 Webpack 给 Loader 注入的 API
+    // 当你使用 this.callback 返回内容时，该 Loader 必须返回 undefined，
+    // 以让 Webpack 知道该 Loader 返回的结果在 this.callback 中，而不是 return 中 
+    return undefined;
+    // return source;
+}
+
+function addSign(content, sign) {
+    return `/** ${sign} */\n${content}`
+}
+```
+
+#### 一个清除所有 console.log 的 loader
+具体代码参考 [custom-loader/console-loader.js](https://github.com/tywd/webpack-learn/tree/master/custom-loader/console-loader.js) 
+```js
+// 自定义loader 功能是在编译出的代码中简单做一下去除代码中的 console.log 
+module.exports = function (source) {
+    return handleConsole(source)
+}
+
+function handleConsole(content) {
+    return content.replace(/console.log\(['|"](.*?)['|"]\)/, '')
+}
+```
+以上loader如何使用请参考下面  # 使用编写好的自定义loader
 ### 编写 loader 常用 API 参考
 `this.callback`： 可以同步或者异步调用的并返回多个结果的函数。预期的参数是：
 ```js
@@ -439,12 +478,82 @@ module.exports = {
 }
 ```
 ### 9. thread-loader
+安装 `npm i -D thread-loader`
+
+放置在其他 loader 之前，在这个 loader 之后的 loader 就会在单独的 worker 池(worker pool)中运行
+
+在 worker 池(worker pool)中运行的 loader 是受到限制的。例如：
+
+- 这些 loader 不能产生新的文件。
+- 这些 loader 不能使用定制的 loader API（也就是说，通过插件）。
+- 这些 loader 无法获取 webpack 的选项设置。
+- 每个 worker 都是一个单独的有 600ms 限制的 node.js 进程。同时跨进程的数据交换也会被限制。
+
+所以一般仅在耗时的 loader 上使用
+```js
+// webpack.config.js
+module.exports = {
+  module: {
+    rules: [
+      {
+        test: /\.js$/,
+        include: path.resolve("src"),
+        use: [
+          "thread-loader",
+          "babel-loader"
+          // your expensive loader - expensive(昂贵的)，一般是指 babel-loader 这种性能开销较大的loader
+        ]
+      }
+    ]
+  }
+}
+```
+> ps: 预热：可以通过预热 worker 池(worker pool)来防止启动 worker 时的高延时。
+>
+> 这会启动池(pool)内最大数量的 worker 并把指定的模块载入 node.js 的模块缓存中。
+```js
+const threadLoader = require('thread-loader');
+threadLoader.warmup({
+  // pool options, like passed to loader options
+  // must match loader options to boot the correct pool
+}, [
+  // modules to load
+  // can be any module, i. e.
+  'babel-loader',
+  'babel-preset-es2015',
+  'sass-loader',
+]);
+```
+
+更多配置请参考 npm [thread-loader](https://www.npmjs.com/package/thread-loader)
 ### 10. cache-loader
+安装 `npm i -D thread-loader`
+
+通常在一些性能开销较大的 loader 之前添加此 loader，以将结果缓存到磁盘里。
+
+```js
+module.exports = {
+  module: {
+    rules: [
+      {
+        test: /\.ext$/,
+        use: ["cache-loader", "babel-loader"],
+        include: path.resolve('src'),
+      },
+    ],
+  },
+};
+```
+>PS: 请注意，保存和读取这些缓存文件会有一些时间开销，所以请只对性能开销较大的 loader 使用此 loader。如babel-loader
+
+更多配置请参考 npm [cache-loader](https://www.npmjs.com/package/cache-loader)
 # 写在最后
 ## 参考文章
 [# 深入浅出的webpack](https://webpack.wuhaolin.cn/5%E5%8E%9F%E7%90%86/5-4%E7%BC%96%E5%86%99Plugin.html)
 
 [# 吐血整理的webpack入门知识及常用loader和plugin](https://juejin.cn/post/7067051380803895310)
+
+[# webpack中文](https://webpack.html.cn/)
 
 ## 代码地址
 https://github.com/tywd/webpack-learn
