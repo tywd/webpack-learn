@@ -146,12 +146,80 @@ https://github.com/tywd/webpack-learn/tree/master/custom-plugins 下的的构建
 在
 https://github.com/tywd/webpack-learn 查看如何使用
 #### 判断 Webpack 使用了哪些插件
-参考 [custom-plugins/basic-plugin.js](https://github.com/tywd/webpack-learn/tree/master/custom-plugins/basic-plugin.js)  hasHtmlWebpackPlugin 方法
+具体代码参考 [custom-plugins/basic-plugin.js](https://github.com/tywd/webpack-learn/tree/master/custom-plugins/basic-plugin.js)  hasHtmlWebpackPlugin 方法
 #### compiler 事件钩子 done 和 failed
-参考 [custom-plugins/end-webpack-plugin.js](https://github.com/tywd/webpack-learn/tree/master/custom-plugins/end-webpack-plugin.js) 
-#### compiler 的 compilation 事件钩子 processAssets 和 emitAsset
-参考 [custom-plugins/filelist-plugin.js](https://github.com/tywd/webpack-learn/tree/master/custom-plugins/filelist-plugin.js) 
+具体代码参考，代码中有详细的注释 [custom-plugins/end-webpack-plugin.js](https://github.com/tywd/webpack-learn/tree/master/custom-plugins/end-webpack-plugin.js) 
+```js
+class EndWebpackPlugin {
+    // 在构造函数中获取用户给该插件传入的配置
+    constructor(doneCallback, failCallback) {
+        // 存下在构造函数中传入的回调函数
+        this.doneCallback = doneCallback;
+        this.failCallback = failCallback;
+    }
 
+    apply(compiler) {
+        compiler.hooks.done.tap('EndWebpackPlugin', (stats) => {
+            this.doneCallback(stats); // 在 done 事件中回调 doneCallback
+        })
+        compiler.hooks.failed.tap('EndWebpackPlugin', (err) => {
+            this.failCallback(err); // 在 failed 事件中回调 failCallback
+        })
+    }
+}
+// 导出 Plugin
+module.exports = EndWebpackPlugin;
+```
+#### compiler 的 compilation 事件钩子 processAssets 和 emitAsset
+具体代码参考，代码中有详细的注释 [custom-plugins/filelist-plugin.js](https://github.com/tywd/webpack-learn/tree/master/custom-plugins/filelist-plugin.js) 
+```js
+// 一个简单的示例插件，生成一个叫做 assets.md 的新文件；文件内容是所有构建生成的文件的列表
+// 参考 https://webpack.docschina.org/contribute/writing-a-plugin/#creating-a-plugin
+class FileListPlugin {
+    static defaultOptions = {
+        outputFile: 'assets.md', // 输出的md文件名
+    };
+    // 需要传入自定义插件构造函数的任意选项
+    //（这是自定义插件的公开API）
+    constructor(options = {}) {
+        // 在应用默认选项前，先应用用户指定选项
+        // 合并后的选项暴露给插件方法
+        // 记得在这里校验所有选项 可参考 basic-plugin.js 使用 validate 方法
+        this.options = {
+            ...FileListPlugin.defaultOptions,
+            ...options
+        };
+    }
+    apply(compiler) {
+        const pluginName = FileListPlugin.name;
+        const { webpack } = compiler;
+        const { Compilation } = webpack;
+        const { RawSource } = webpack.sources;
+        compiler.hooks.thisCompilation.tap(pluginName, (compilation) => {
+            compilation.hooks.processAssets.tap(
+                {
+                  name: pluginName,
+                  stage: Compilation.PROCESS_ASSETS_STAGE_SUMMARIZE,
+                },
+                (assets) => {
+                  const content =
+                    '# In this build:\n\n' +
+                    Object.keys(assets)
+                      .map((filename) => `- ${filename}`)
+                      .join('\n');
+                      
+                  compilation.emitAsset(
+                    this.options.outputFile,
+                    new RawSource(content)
+                  );
+                }
+              );
+        })
+    }
+}
+
+module.exports = FileListPlugin
+```
 # 使用编写好的自定义plugin
 参考上面 [什么是Plugin](#什么是Plugin)
 
